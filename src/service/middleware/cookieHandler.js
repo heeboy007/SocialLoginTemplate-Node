@@ -1,5 +1,5 @@
-import { domain } from "../../util/const";
-import { generateJWTToken } from "./jwtMiddleware";
+import { domain } from "../../util/const.js";
+import { generateJWTToken } from "./jwtMiddleware.js";
 
 function setCookie(signable, res){
     //const singable = parseSignable(user, userProfile);

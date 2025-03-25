@@ -3,10 +3,9 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
-
-
-import { jwtMiddleware } from './service/middleware/jwtMiddleware';
-import { domain } from './util/const';
+import { jwtMiddleware } from './service/middleware/jwtMiddleware.js';
+import { domain } from './util/const.js';
+import { logger } from './util/logger.js';
 
 const app = express();
 
@@ -40,9 +39,11 @@ async function configureServer(app){
     // app.use('/analytics', analyticsRouter);
     // app.use('/friends', friendsRouter);
     
-    console.log('Connected routers to express.');
+    logger.info('Connected routers to express.');
 }
 
 await configureServer(app);
 
-export default app;
+export {
+    app
+};

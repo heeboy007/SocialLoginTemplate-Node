@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken';
-import setCookie from './cookieHandler';
 
-import { jwt_secret } from './const';
+import setCookie from './cookieHandler.js';
+import { jwt_secret } from '../../util/const.js';
+
 
 //token for JWT web token(cookie, localStorage)
 function generateJWTToken(signable) {

@@ -1,6 +1,7 @@
 
 import winston from 'winston';
 import winstonDaily from 'winston-daily-rotate-file';
+import { log_dir } from './const.js';
 
 const { combine, timestamp, printf } = winston.format;
 

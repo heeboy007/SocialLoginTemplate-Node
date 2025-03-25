@@ -6,7 +6,8 @@ node_modules/
 *.pem
 
 #log
-log
+logs/
+*.log
 
 #apple
 .DS_Store

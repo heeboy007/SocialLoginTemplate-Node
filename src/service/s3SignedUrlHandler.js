@@ -1,5 +1,5 @@
 import AWS from 'aws-sdk';
-import { aws_arn, aws_s3_name } from '../util/const';
+import { aws_arn, aws_s3_name } from '../util/const.js';
 
 AWS.config.credentials = new AWS.TemporaryCredentials({
     RoleArn: aws_arn,

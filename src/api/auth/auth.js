@@ -1,9 +1,5 @@
 
-import axios from 'axios';
 import { OAuth2Client } from 'google-auth-library';
-// import { validateGoogleToken, validateLogin, validateRegister } from '../validator/authValidator.js';
-// import { googleWebClientKey } from '../../util/constants.js';
-// import { findProfileForSignable, parseProfileAndSave } from './user.controller.js';
 import setCookie from '../../service/middleware/cookieHandler';
 import { wrapWithErrorHandler } from '../../service/util/errorHandler';
 
@@ -48,11 +44,6 @@ async function google(req, res) {
         }
     }
 
-    googleRegisterAndLogin(res, google_id, email, email_verified, profile_image_url);
-    return res;
-}
-
-async function googleRegisterAndLogin(res, google_id, email, profile_image_url) {
     const user = await User.findOne({ where: { google_id, account_login_method: "google" }});
     if(user) { //기존 구글 로그인 기록이 있음
         const profile = await findProfileForSignable(user.id);
@@ -75,6 +66,7 @@ async function googleRegisterAndLogin(res, google_id, email, profile_image_url) 
     } catch (e) {
         res.status(500).json({ authError: '구글 계정으로 회원가입에 실패하였습니다.' });
     }
+    return res;
 }
 
 async function check(req, res) {

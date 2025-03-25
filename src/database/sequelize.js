@@ -1,9 +1,11 @@
 
 import { Sequelize } from 'sequelize';
-import { logger } from '../util/logger';
+import { logger } from '../util/logger.js';
+import { postgres_db, postgres_pass, postgres_port, postgres_user } from '../util/const.js';
 
 const sequelize = new Sequelize(postgres_db, postgres_user, postgres_pass, {
     host: "localhost",
+    port: postgres_port,
     dialect: "postgres",
     logging: (sql, timing) => {
         logger.debug(`${sql}`);

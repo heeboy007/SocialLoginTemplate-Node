@@ -1,9 +1,9 @@
-import app from './app.js';
 import https from 'https';
 import fs from 'fs';
-import { https_cred_path } from './util/const.js';
+import { https_cred_path, mode, port } from './util/const.js';
+import { app } from './app.js';
 
-if(https_mode === 'PRODUCTION'){
+if(mode === 'PRODUCTION'){
     // HTTPS server setup
     let credentials = {};
     
