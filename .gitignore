@@ -1,0 +1,12 @@
+#useless binary
+node_modules/
+
+#secure reasons
+.env
+*.pem
+
+#log
+log
+
+#apple
+.DS_Store
