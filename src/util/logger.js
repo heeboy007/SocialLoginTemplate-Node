@@ -7,7 +7,7 @@ const { combine, timestamp, printf } = winston.format;
 
 const logFormat = printf((info) => {
     return `[${info.timestamp}][${info.level}] : ${info.message}`;
-})
+});
 
 /*
  * Log Level
@@ -25,7 +25,7 @@ const logger = winston.createLogger({
             level: 'http',
             datePattern: 'YYYY-MM-DD',
             dirname: log_dir,
-            filename: `qplog-%DATE%.log`,
+            filename: `applog-%DATE%.log`,
             maxFiles: 30,
             zippedArchive: true,
         }),
@@ -33,7 +33,7 @@ const logger = winston.createLogger({
             level: 'error',
             datePattern: 'YYYY-MM-DD',
             dirname: log_dir + '/error',  // error.log 파일은 /logs/error 하위에 저장
-            filename: `qplog-%DATE%.error.log`,
+            filename: `applog-%DATE%.error.log`,
             maxFiles: 30,
             zippedArchive: true,
         }),

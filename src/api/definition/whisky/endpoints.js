@@ -1,15 +1,5 @@
-
-import wrapWithErrorHandler from "../../util/errorHandler.js";
-
-async function getProfile(req, res) {
-    const { id } = req.userState;
-    const profile = await UserProfile.findByPk(id);
-    if(!profile){
-        return res.status(500).json({ profileError: "프로필 불러오기 중 에러가 발생했습니다." });
-    }
-    console.log("API : user.controller.js : validation error : " + error);
-    return res.status(200).json({ profile: profile.dataValues });
-}
+import { User } from "../../../database/model/user.js";
+import { wrapWithErrorHandler } from "../../errorHandler.js";
 
 async function onBoarding(req, res){
     //100% exists
@@ -28,15 +18,24 @@ async function onBoarding(req, res){
     //     return res.status(500).json({ errorMessage: "입력값 검증중 에러" });
     // }
 
-    const profile = await UserProfile.findByPk(id);
-    profile.update({
+    const user = await User.findByPk(id);
+    user.update({
         ...(req.body)
     });
 
     return res.status(201).json({ profile: "정상적으로 반영되었습니다." });
 }
 
+// async function getProfile(req, res) {
+//     const { id } = req.userState;
+//     const profile = await UserProfile.findByPk(id);
+//     if(!profile){
+//         return res.status(500).json({ profileError: "프로필 불러오기 중 에러가 발생했습니다." });
+//     }
+//     console.log("API : user.controller.js : validation error : " + error);
+//     return res.status(200).json({ profile: profile.dataValues });
+// }
+
 export default wrapWithErrorHandler({
-    onBoarding,
-    getProfile
+    onBoarding
 });

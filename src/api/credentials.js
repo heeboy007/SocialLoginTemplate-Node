@@ -1,4 +1,4 @@
-import { https_cred_path } from "./util/const.js";
+import { https_cred_path } from "../util/const.js";
 
 function getHttpsCredentials() {
     const privateKey = fs.readFileSync(https_cred_path + '/privkey.pem', 'utf8');

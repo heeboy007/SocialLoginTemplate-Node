@@ -3,9 +3,12 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
-import { jwtMiddleware } from './service/middleware/jwtMiddleware.js';
-import { domain } from './util/const.js';
-import { logger } from './util/logger.js';
+
+import { authPath, authRouter } from './definition/auth/index.js';
+
+import { domain } from '../util/const.js';
+import { logger } from '../util/logger.js';
+import { jwtMiddleware } from './middleware/jwtMiddleware.js';
 
 const backend = express();
 
@@ -26,11 +29,11 @@ backend.use((req, res, next) => {
 });
 
 async function configureServer(backend){
-    backend.get('/', (req, res) => {
-        return res.status(404).send('Nothing Found.');
-    });
+    backend.get('/', (req, res) => { return res.status(404).send('Nothing Found.'); });
+    logger.info("Configuring backend : Index set");
 
-    // app.use('/auth', authRouter);
+    backend.use(authPath, authRouter);
+    logger.info(`Configuring backend : authRouter set PATH : ${authPath}`);
     // app.use('/emailToken', emailTokenRouter);
     // app.use('/user', profileRouter);
     // app.use('/avatar', avatarRouter);
@@ -42,8 +45,7 @@ async function configureServer(backend){
     logger.info('Connected routers to express.');
 }
 
-await configureServer(backend);
-
 export {
-    backend
+    backend,
+    configureServer
 };

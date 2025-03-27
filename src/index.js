@@ -1,13 +1,15 @@
 import https from 'https';
 import { domain, mode, port } from './util/const.js';
-import { backend } from './backend.js';
-import { getHttpsCredentials } from './credentials.js';
 import { logger } from './util/logger.js';
 import { dbMigrateSync } from './database/migration/version.js';
+import { backend, configureServer } from './api/backend.js';
+import { getHttpsCredentials } from './api/credentials.js';
 
-function app() {
-    dbMigrateSync()
-    .then(() => {
+async function app() {
+    try {
+        await dbMigrateSync();
+        await configureServer(backend);
+
         if(mode === 'PRODUCTION'){
             // HTTPS server setup
             const credentials = getHttpsCredentials();
@@ -17,10 +19,9 @@ function app() {
         } else {
             backend.listen(port, () => logger.info('Non-Sercure(HTTP) server on http://localhost:' + port));
         }
-    })
-    .catch((error) => {
+    } catch(e) { 
         logger.error(`Cirital error while setting up db migration, as follows : `, error);
-    })
+    }
 }
 
 app()

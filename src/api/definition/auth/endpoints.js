@@ -1,7 +1,8 @@
 
 import { OAuth2Client } from 'google-auth-library';
-import setCookie from '../../service/middleware/cookieHandler';
-import { wrapWithErrorHandler } from '../../service/util/errorHandler';
+import setCookie from '../../middleware/cookieHandler.js';
+import { wrapWithErrorHandler } from '../../errorHandler.js';
+import { google_key } from '../../../util/const.js';
 
 const client = new OAuth2Client();
 
@@ -12,7 +13,7 @@ async function google(req, res) {
     //passed validation
     const result = validateGoogleToken(req.body);
     if(result.error) {
-        return res.status(400).json({ authError: "토큰값 검증 실패" });
+        return res.status(400).json({ message: "토큰값 검증 실패" });
     }
     //여기서 부터 body의 값을 언패킹합니다.
     const { token } = req.body;
@@ -21,7 +22,7 @@ async function google(req, res) {
     try {
         const ticket = await client.verifyIdToken({
             idToken: token,
-            audience: googleWebClientKey,  // Specify the CLIENT_ID of the app that accesses the backend
+            audience: google_key,  // Specify the CLIENT_ID of the app that accesses the backend
         });
 
         const payload = ticket.getPayload();
@@ -32,15 +33,15 @@ async function google(req, res) {
 
         console.log("API : auth.controller.js : googleIdToken : " + email);
         if(!google_id){
-            return res.status(401).json({ authError: "토큰 확인 중 에러" });
+            return res.status(401).json({ message: "토큰 확인 중 에러" });
         }
     } catch (e) {
         // Handle different types of errors here
         if (e.message.includes('invalid_token')) {
-            return res.status(401).json({ authError: "토큰 확인 중 에러" });
+            return res.status(401).json({ message: "토큰 확인 중 에러" });
         } else {
             console.error('Error verifying token', e);
-            return res.status(500).json({ authError: "토큰 확인 실패" });
+            return res.status(500).json({ message: "토큰 확인 실패" });
         }
     }
 
@@ -64,7 +65,7 @@ async function google(req, res) {
         setCookie(signable, res);
         res.status(200).json({ auth: buildProfileInfoForClient(signable, profile) });
     } catch (e) {
-        res.status(500).json({ authError: '구글 계정으로 회원가입에 실패하였습니다.' });
+        res.status(500).json({ message: '구글 계정으로 회원가입에 실패하였습니다.' });
     }
     return res;
 }
