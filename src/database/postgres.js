@@ -1,7 +1,10 @@
+import pg from "pg";
+import { postgres_db, postgres_host, postgres_pass, postgres_port, postgres_user } from "../util/const.js";
+const { Pool } = pg;
 
 const postgres_pool = new Pool({
-    host: 'localhost',
-    port: 5432,
+    host: postgres_host,
+    port: postgres_port,
     user: postgres_user,
     password: postgres_pass,
     database: postgres_db,
@@ -9,5 +12,5 @@ const postgres_pool = new Pool({
 });
 
 export { 
-    postgres_pool,
+    postgres_pool
 };

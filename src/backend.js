@@ -7,26 +7,26 @@ import { jwtMiddleware } from './service/middleware/jwtMiddleware.js';
 import { domain } from './util/const.js';
 import { logger } from './util/logger.js';
 
-const app = express();
+const backend = express();
 
-app.use(bodyParser.json());
-app.use(cors({
+backend.use(bodyParser.json());
+backend.use(cors({
     // origin: 'http://localhost:8080',
     // credentials: true
 }));
-app.use(cookieParser());
-app.use(jwtMiddleware);
-app.use("/static", express.static(path.resolve() + '/public'));
+backend.use(cookieParser());
+backend.use(jwtMiddleware);
+backend.use("/static", express.static(path.resolve() + '/public'));
 
-app.use((req, res, next) => {
+backend.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', domain);
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     next();
 });
 
-async function configureServer(app){
-    app.get('/', (req, res) => {
+async function configureServer(backend){
+    backend.get('/', (req, res) => {
         return res.status(404).send('Nothing Found.');
     });
 
@@ -42,8 +42,8 @@ async function configureServer(app){
     logger.info('Connected routers to express.');
 }
 
-await configureServer(app);
+await configureServer(backend);
 
 export {
-    app
+    backend
 };

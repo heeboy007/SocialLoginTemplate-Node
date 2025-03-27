@@ -9,8 +9,8 @@ const Terms = (sequelize) => {
             type: { type: DataTypes.TEXT, allowNull: false, },
             version: { type: DataTypes.TEXT, allowNull: false, },
             content: { type: DataTypes.TEXT, allowNull: false, },
-            effective_at: { type: DataTypes.TIMESTAMP, allowNull: false, },
-            created_at: { type: DataTypes.TIMESTAMP, allowNull: false, defaultValue: Sequelize.NOW },
+            effective_at: { type: DataTypes.DATE, allowNull: false, timezone: true },
+            created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.NOW, timezone: true },
         },
         {
             sequelize,

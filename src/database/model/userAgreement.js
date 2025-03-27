@@ -10,7 +10,7 @@ const UserAgreement = (sequelize) => {
             user_id: { type: DataTypes.INTEGER, allowNull: false, },
             terms_type: { type: DataTypes.TEXT, allowNull: false, },
             terms_version: { type: DataTypes.TEXT, allowNull: false, },
-            agreed_at: { type: DataTypes.TIMESTAMP, allowNull: false, defaultValue: Sequelize.NOW },
+            agreed_at: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.NOW },
         },
         {
             sequelize,

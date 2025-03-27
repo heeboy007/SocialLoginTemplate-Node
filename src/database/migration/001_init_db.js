@@ -1,11 +1,10 @@
 
-import { logger } from "../../util/logger";
-import { friendship_tablename } from "../model/friendship";
-import { global_tablename } from "../model/global";
-import { term_tablename } from "../model/terms";
-import { user_tablename } from "../model/user";
-import { user_agreement_tablename } from "../model/user_agreement";
-import { postgres_pool } from "../postgres";
+import { logger } from "../../util/logger.js";
+import { global_tablename } from "../model/global.js";
+import { term_tablename } from "../model/terms.js";
+import { user_tablename } from "../model/user.js";
+import { user_agreement_tablename } from "../model/userAgreement.js";
+import { postgres_pool } from "../postgres.js";
 
 async function migrate_001_init_db() {
     const prev_version = 0;
@@ -28,34 +27,24 @@ async function migrate_001_init_db() {
         //create enum types
         await conn.query(`CREATE TYPE login_method_enum AS ENUM ('google', 'kakao', 'naver');`);
         await conn.query(`CREATE TYPE account_state_enum AS ENUM ('active', 'closed', 'suspended');`);
+        logger.info(`CREATE TYPE login_method_enum`);
+        logger.info(`CREATE TYPE account_state_enum`);
 
         await conn.query(`
             CREATE TABLE ${user_tablename} (
                 id SERIAL PRIMARY KEY,
                 nickname TEXT NOT NULL, 
                 email TEXT NOT NULL, 
-                recent_login TIMESTAMP DEFAULT now(),
-                account_state login_method_enum NOT NULL,
-                account_state account_state_enum NOT NULL DEFAULT 'active',
+                recent_login TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                login_method login_method_enum NOT NULL,
+                state account_state_enum NOT NULL DEFAULT 'active',
                 social_media_external_id TEXT,
                 social_media_external_access_token TEXT,
-                created_at TIMESTAMP DEFAULT now(),
-                updated_at TIMESTAMP DEFAULT now()
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         `);
-
-        await conn.query(`CREATE TYPE friendship_status AS ENUM ('pending', 'accepted', 'blocked');`);
-
-        await conn.query(`
-            CREATE TABLE ${friendship_tablename} (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                status friendship_status DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT now(),
-                UNIQUE(user_id, friend_id)
-            );
-        `);
+        logger.info(`CREATE TABLE ${user_tablename}`);
 
         await conn.query(`
             CREATE TABLE ${term_tablename} (
@@ -63,10 +52,11 @@ async function migrate_001_init_db() {
                 type TEXT NOT NULL,
                 version TEXT NOT NULL,
                 content TEXT NOT NULL,                 
-                effective_at TIMESTAMP NOT NULL,       
-                created_at TIMESTAMP DEFAULT now()
+                effective_at TIMESTAMPTZ NOT NULL,       
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        logger.info(`CREATE TABLE ${term_tablename}`);
 
         await conn.query(`
             CREATE TABLE ${user_agreement_tablename} (
@@ -74,19 +64,28 @@ async function migrate_001_init_db() {
                 user_id INTEGER REFERENCES users(id),
                 terms_type TEXT NOT NULL,
                 terms_version TEXT NOT NULL,
-                agreed_at TIMESTAMP DEFAULT now()
+                agreed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        logger.info(`CREATE TABLE ${user_agreement_tablename}`);
 
         await conn.query(`
             CREATE TABLE ${global_tablename} (
                 schema_version INTEGER NOT NULL DEFAULT 0,
-                total_session_time INTEGER NOT NULL DEFAULT 0,
-                total_user_count FLOAT DEFAULT 0,
-                created_at TIMESTAMP DEFAULT now(),
-                updated_at TIMESTAMP DEFAULT now()
+                total_session_time FLOAT NOT NULL DEFAULT 0,
+                total_user_count INTEGER DEFAULT 0,
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         `);
+        logger.info(`CREATE TABLE ${global_tablename}`);
+
+        await conn.query(`
+            INSERT INTO ${global_tablename}
+            (schema_version, total_session_time, total_user_count, created_at, updated_at)
+            VALUES (1, 0.0, 0, now(), now())
+        `);
+        logger.info(`INSERT INTO ${global_tablename}, only row inserted.`);
 
         //setup trigger
         await conn.query(`
@@ -100,11 +99,12 @@ async function migrate_001_init_db() {
             $$ LANGUAGE plpgsql;
         `);
         await conn.query(`
-            CREATE TRIGGER after_user_delete
-            AFTER DELETE ON users
+            CREATE TRIGGER after_user_insert
+            AFTER INSERT ON users
             FOR EACH ROW
-            EXECUTE PROCEDURE decrement_user_count();
+            EXECUTE PROCEDURE increment_user_count();
         `);
+        logger.info(`CREATE TRIGGER after_user_insert`);
 
         // 트랜잭션 커밋
         await conn.query('COMMIT');
