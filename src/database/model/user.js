@@ -10,7 +10,7 @@ const User = (sequelize) => {
             recent_login: { type: DataTypes.DATE, allowNull: false },
             login_method: { type: DataTypes.ENUM, values: ['google', 'kakao', 'naver'], allowNull: false },
             state: { type: DataTypes.ENUM, values: ['active', 'closed', 'suspended'], defaultValue: 'active', allowNull: false },
-            social_media_external_id: { type: DataTypes.TEXT, },
+            social_media_external_id: { type: DataTypes.TEXT, allowNull: false },
             social_media_external_access_token: { type: DataTypes.TEXT },
         },
         {
@@ -23,7 +23,8 @@ const User = (sequelize) => {
                     fields: [{ name: 'id' }]
                 },
             ],
-            timestamps: true
+            timestamps: true,
+            underscored: true
         }
     );
 };

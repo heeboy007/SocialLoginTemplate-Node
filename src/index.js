@@ -15,12 +15,12 @@ async function app() {
             const credentials = getHttpsCredentials();
             const sslServer = https.createServer(credentials, backend);
         
-            sslServer.listen(port, () => logger.info(`Secure(HTTPS) server on ${domain}:${port}`));   
+            sslServer.listen(port, "0.0.0.0", () => logger.info(`Secure(HTTPS) server on ${domain}:${port}`));   
         } else {
-            backend.listen(port, () => logger.info('Non-Sercure(HTTP) server on http://localhost:' + port));
+            backend.listen(port, "0.0.0.0", () => logger.info('Non-Sercure(HTTP) server on http://0.0.0.0:' + port));
         }
     } catch(e) { 
-        logger.error(`Cirital error while setting up db migration, as follows : `, error);
+        logger.error(`Cirital error while setting up db migration, as follows : `, e);
     }
 }
 

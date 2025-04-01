@@ -11,7 +11,8 @@ const GlobalValue = (sequelize) => {
         {
             sequelize,
             tableName: global_tablename,
-            timestamps: true
+            timestamps: true,
+            underscored: true
         }
     );
 };

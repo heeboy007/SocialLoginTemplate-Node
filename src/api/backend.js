@@ -9,14 +9,16 @@ import { authPath, authRouter } from './definition/auth/index.js';
 import { domain } from '../util/const.js';
 import { logger } from '../util/logger.js';
 import { jwtMiddleware } from './middleware/jwtMiddleware.js';
+import { loggerHelper } from './middleware/loggerHelper.js';
 
 const backend = express();
 
 backend.use(bodyParser.json());
-backend.use(cors({
-    // origin: 'http://localhost:8080',
-    // credentials: true
-}));
+// backend.use(cors({
+//     // origin: 'http://localhost:8080',
+//     // credentials: true
+// }));
+backend.use(loggerHelper)
 backend.use(cookieParser());
 backend.use(jwtMiddleware);
 backend.use("/static", express.static(path.resolve() + '/public'));

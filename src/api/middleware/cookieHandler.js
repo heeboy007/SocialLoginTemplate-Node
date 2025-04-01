@@ -1,6 +1,7 @@
 import { domain } from "../../util/const.js";
 import { generateJWTToken } from "./jwtMiddleware.js";
 
+// will be deprecated if not browser, since it's mobile based.
 function setCookie(signable, res){
     //const singable = parseSignable(user, userProfile);
     const token = generateJWTToken(signable);

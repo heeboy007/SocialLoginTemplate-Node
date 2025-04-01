@@ -3,22 +3,17 @@ import { logger } from "../../util/logger.js";
 import { schemas } from "../db.js";
 import { global_tablename } from "../model/global.js";
 import { postgres_pool } from "../postgres.js";
-import { migrate_001_init_db } from "./001_init_db.js";
+import { migrate } from "./migrate.js";
 import { MigrateError } from "./migrateError.js";
 
-const migrate = [
-    async () => {},
-    migrate_001_init_db,
-];
-
-async function updateVersion(version) {
+async function updateVersionTo(version) {
     const conn = await postgres_pool.connect();
     if(version > 1) {
         try {
             await conn.query("BEGIN");
     
             await conn.query(`UPDATE ${global_tablename} 
-                SET schema_version=$1
+                SET schema_version=$1,
                     updated_at=now()`, [version]);
     
             await conn.query("COMMIT");
@@ -33,9 +28,9 @@ async function updateVersion(version) {
 }
 
 async function checkGlobalExists() {
-    const conn = await postgres_pool.connect();
-    let exists = true;
+    let exists = true, conn = null;
     try {
+        conn = await postgres_pool.connect();
         const { rows } = await conn.query(`SELECT 1 FROM information_schema.tables 
             WHERE table_schema='public'
             AND table_catalog=$1
@@ -46,8 +41,10 @@ async function checkGlobalExists() {
         logger.info(`GlobalValue table is set, good to select`);
     } catch (error) {
         logger.error(`❌ checkGlobalExists failed with error`, error);
+        exists = false;
     } finally {
-        conn.release(); // 연결 해제
+        if(conn)
+            conn.release(); // 연결 해제
         return exists;
     }
 }
@@ -80,11 +77,29 @@ async function dbMigrateSync() {
         throw MigrateError(`❌ APP DB version is higher, Please update APP_REQUIERD_DB_VERSION to ${version}`) 
     } else {
         logger.info(`Updated required, migrating to version : ${req_db_version}`);
-        for(let v = version + 1; v <= req_db_version; v += 1) {
+        for(let v = version; v < req_db_version; v += 1) {
+            const prev_version = v;
+            const target_version = v + 1;
             try {
-                const migrate_func = migrate[v];
-                await migrate_func();
-                await updateVersion(v);
+                const conn = await postgres_pool.connect();
+                try {
+                    // 트랜잭션 시작
+                    if(prev_version) //if version is zero, we need to exectue non transaction stuffs.
+                        await conn.query('BEGIN'); 
+       
+                    await migrate[prev_version](conn);
+            
+                    // 트랜잭션 커밋
+                    if(prev_version)
+                        await conn.query('COMMIT');
+                    logger.info(`✅ Migration code ${prev_version} -> ${target_version} complete`);
+                } catch (error) {
+                    await conn.query('ROLLBACK'); // 실패 시 롤백
+                    logger.error(`❌ Migration code ${prev_version} -> ${target_version} failed with error`, error);
+                } finally {
+                    conn.release(); // 연결 해제
+                }
+                await updateVersionTo(target_version);
             } catch (e){
                 if (e instanceof MigrateError) { throw e; }
                 else { throw MigrateError(`Error while update to version : ${v}`) }

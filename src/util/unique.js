@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 
 //6 digits for EMAIL
-function generate_6_digits() {
+function generate6Digits() {
     return crypto.randomInt(999999).toString().padStart(6, '0');
 }
 
 export {
-    generate_6_digits,
+    generate6Digits,
 };

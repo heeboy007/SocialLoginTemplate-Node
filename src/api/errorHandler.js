@@ -1,8 +1,10 @@
+import { logger } from "../util/logger.js";
+
 const errorHandler = (block) => async (req, res) => {
     try {
         await block(req, res);
     } catch(e) {
-        console.log("FATAL FAILURE : " + e);
+        logger.error("FATAL FAILURE : " + e);
         res.status(500).json({ error: "unknown error had occured." });
     }
 }
