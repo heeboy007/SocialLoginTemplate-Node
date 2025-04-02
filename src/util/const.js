@@ -18,6 +18,8 @@ const official_mail_address = process.env.APP_OFFICIAL_MAIL;
 const google_key = process.env.GOOGLE_OAUTH_CLIENT_KEY;
 const google_mail_key = process.env.REDUNDANT_GOOGLE_MAIL_KEY;
 
+const kakao_native_key = process.env.KAKAO_NATIVE_KEY;
+
 const aws_arn = process.env.AWS_ROLE_ARN;
 const aws_s3_name = process.env.AWS_S3_BUCKET;
 
@@ -39,6 +41,8 @@ export {
 
     google_key,
     google_mail_key,
+
+    kakao_native_key,
 
     aws_arn,
     aws_s3_name,

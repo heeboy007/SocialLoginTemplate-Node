@@ -60,7 +60,7 @@ async function getSchemaVersion() {
             version = record?.schema_version ?? 0;
         } catch(e) {
             logger.error(`Error while loading schema version ${JSON.stringify(e)}`)
-            throw MigrateError("Error while loading schema version.");
+            throw new MigrateError("Error while loading schema version.");
         } finally {
             return version;
         }
@@ -74,7 +74,7 @@ async function dbMigrateSync() {
     if(version == req_db_version) {
         logger.info(`✅ DB version is already met, nothing to do. Version : ${version}`);
     } else if(version > req_db_version) {
-        throw MigrateError(`❌ APP DB version is higher, Please update APP_REQUIERD_DB_VERSION to ${version}`) 
+        throw new MigrateError(`❌ APP DB version is higher, Please update APP_REQUIERD_DB_VERSION to ${version}`) 
     } else {
         logger.info(`Updated required, migrating to version : ${req_db_version}`);
         for(let v = version; v < req_db_version; v += 1) {
@@ -102,7 +102,7 @@ async function dbMigrateSync() {
                 await updateVersionTo(target_version);
             } catch (e){
                 if (e instanceof MigrateError) { throw e; }
-                else { throw MigrateError(`Error while update to version : ${v}`) }
+                else { throw new MigrateError(`Error while update to version : ${v}`) }
             }
         }
     }

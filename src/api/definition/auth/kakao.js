@@ -1,17 +1,17 @@
-import { google_key } from '../../../util/const.js';
-import { OAuth2Client } from 'google-auth-library';
+
 import { validateToken } from '../../validator/authValidator.js';
 import { generateJWTToken } from '../../middleware/jwtMiddleware.js';
 import { generate6Digits } from '../../../util/unique.js';
 import { logger } from '../../../util/logger.js';
 import { schemas } from '../../../database/db.js';
 import { Op } from 'sequelize';
+import { kakao_native_key } from '../../../util/const.js';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
-const client = new OAuth2Client();
+const JWKS = createRemoteJWKSet(new URL('https://kauth.kakao.com/.well-known/jwks.json'));
 
-// 구글 로그인(idToken)
-async function google(req, res) {
-    logger.info("API : auth.controller.js : google");
+async function kakao(req, res) {
+    logger.info("API : auth.controller.js : kakao");
     
     //passed validation
     const result = validateToken(req.body);
@@ -21,18 +21,17 @@ async function google(req, res) {
     //여기서 부터 body의 값을 언패킹합니다.
     const { id_token, access_token } = req.body;
 
-    let google_id, email;
+    let kakao_id;
     try {
-        const ticket = await client.verifyIdToken({
-            idToken: id_token,
-            audience: google_key,  // Specify the CLIENT_ID of the app that accesses the backend
+        const { payload } = await jwtVerify(id_token, JWKS, {
+            issuer: 'https://kauth.kakao.com',
+            audience: kakao_native_key,
         });
 
-        const payload = ticket.getPayload();
-        google_id = payload['sub'];
-        email = payload['email'];
+        logger.info(JSON.stringify(payload));
+        kakao_id = payload['sub'];
 
-        if(!google_id){
+        if(!kakao_id){
             return res.status(401).json({ message: "토큰 확인 중 에러" });
         }
     } catch (e) {
@@ -47,23 +46,22 @@ async function google(req, res) {
 
     const user = await schemas.User.findOne({ 
         where: { 
-            social_media_external_id: google_id, 
-            login_method: "google",
+            social_media_external_id: kakao_id, 
+            login_method: "kakao",
             state: { [Op.not]: "closed" }
         }
     });
 
     if(user) { //기존 구글 로그인 기록이 있음
         const signable = {
-            id: user.id, 
+            id: user.id,
             email: user.email,
-            login_method: "google",
-            social_media_external_id: google_id
+            login_method: "kakao",
+            social_media_external_id: kakao_id
         };
 
         //we may need to update this.
         user.set({
-            email: email,
             social_media_external_access_token: access_token
         });
 
@@ -74,10 +72,9 @@ async function google(req, res) {
     } else { //없으니까 만들어서 보냄
         const user = await schemas.User.create({
             nickname: "Tiempo" + generate6Digits(),
-            email: email,
             recent_login: new Date(),
-            login_method: "google",
-            social_media_external_id: google_id,
+            login_method: "kakao",
+            social_media_external_id: kakao_id,
         })
 
         const signable = {
@@ -95,5 +92,5 @@ async function google(req, res) {
 }
 
 export {
-    google
+    kakao
 }
