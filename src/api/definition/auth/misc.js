@@ -12,7 +12,6 @@ async function check(req, res) {
 
 async function logout(req, res) {
     //cookie set
-    res.clearCookie('access_token');
     return res.status(204);
 }
 

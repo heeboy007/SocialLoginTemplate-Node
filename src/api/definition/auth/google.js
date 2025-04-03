@@ -83,7 +83,7 @@ async function google(req, res) {
         const signable = {
             id: user.id, 
             email: user.email,
-            login_method: user.login_method,
+            login_method: "google",
             social_media_external_id: user.social_media_external_id
         };
         const token = generateJWTToken(signable);

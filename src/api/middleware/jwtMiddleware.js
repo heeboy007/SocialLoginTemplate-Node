@@ -14,7 +14,9 @@ function generateJWTToken(signable) {
 }
 
 const jwtMiddleware = async (req, res, next) => {
-    const token = req.cookies.access_token;
+    const authHeader = req.headers['Authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
     if(!token) //토큰이 없음 
         return next();
     try {
@@ -22,6 +24,8 @@ const jwtMiddleware = async (req, res, next) => {
         req.userState = {
             id: decoded.id,
             email: decoded.email,
+            login_method: decoded.login_method,
+            social_media_external_id: decoded.social_media_external_id
         };
         const now = Math.floor(Date.now() / 1000);
         if(decoded.exp - now < 60 * 5) { //5분 보다 적으면

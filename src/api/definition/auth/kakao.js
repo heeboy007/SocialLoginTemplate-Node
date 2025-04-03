@@ -28,7 +28,7 @@ async function kakao(req, res) {
             audience: kakao_native_key,
         });
 
-        logger.info(JSON.stringify(payload));
+        //logger.info(JSON.stringify(payload));
         kakao_id = payload['sub'];
 
         if(!kakao_id){
@@ -80,7 +80,7 @@ async function kakao(req, res) {
         const signable = {
             id: user.id, 
             email: user.email,
-            login_method: user.login_method,
+            login_method: "kakao",
             social_media_external_id: user.social_media_external_id
         };
         const token = generateJWTToken(signable);
