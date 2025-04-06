@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { https_cred_path } from "../util/const.js";
 
 function getHttpsCredentials() {
