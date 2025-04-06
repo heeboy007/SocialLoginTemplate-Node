@@ -7,7 +7,7 @@ on:
   # 지정한 branch에서 push/pull_request 에 해당하는 command가 수행되면 이 workflow가 동작 합니다.
   push:
     branches: 
-      - master
+      - master #this is master intentionaly, dont' wanna trigger it for real!
 
   # 이부분은 위의 trigger가 없어도 수동으로 동작 할 수 있게끔 해주는 역할을 합니다.
   workflow_dispatch:
@@ -24,37 +24,34 @@ jobs:
 
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - name: checkout release
-      uses: actions/checkout@v3
+    - name: Checkout Release
+      uses: actions/checkout@v4.2.2
 
     # 빌드 전 .env파일 생성
     - name: Generate Environment Variables File for Production
-    #2.$를 통해 변수 할당
-      run: |
-        echo "JWT_SECRETKEY=$JWT_SECRETKEY" >> .env
-        echo "MYSQLDB_URL=$MYSQLDB_URL" >> .env
-        echo "MYSQLDB_DATABASE=$MYSQLDB_DATABASE" >> .env
-        echo "MYSQLDB_USER=$MYSQLDB_USER" >> .env
-        echo "MYSQLDB_PASSWORD=$MYSQLDB_PASSWORD" >> .env
-        echo "PORT=$PORT" >> .env
-        echo "DEV_MODE=PROD" >> .env
-        echo "HTTPS_MODE=HTTPS" >> .env
-        echo "GOOGLE_MAIL_KEY=$GOOGLE_MAIL_KEY" >> .env
-        echo "GOOGLE_OAUTH_CLIENT_KEY=$GOOGLE_OAUTH_CLIENT_KEY" >> .env
+        envsubst < .env.template > .env
       #1.여기서 secrets변수를 가져오고
       env:
+        APP_HTTPS_CREDENTIALS_PATH: ${{ secrets.APP_HTTPS_CREDENTIALS_PATH }}
+        APP_JWT_SECRETKEY: ${{ secrets.APP_JWT_SECRETKEY }}
+        APP_PORT: ${{ secrets.APP_PORT }}
+        APP_PROTOCOL: ${{ secrets.APP_PROTOCOL }}
+        APP_REQUIERD_DB_VERSION: ${{ secrets.APP_REQUIERD_DB_VERSION }}
         AWS_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-        JWT_SECRETKEY: ${{ secrets.JWT_SECRETKEY }}
-        MYSQLDB_URL: ${{ secrets.MYSQLDB_URL }}
-        MYSQLDB_DATABASE: ${{ secrets.MYSQLDB_DATABASE }}
-        MYSQLDB_USER: ${{ secrets.MYSQLDB_USER }}
-        MYSQLDB_PASSWORD: ${{ secrets.MYSQLDB_PASSWORD }}
-        PORT: ${{ secrets.PORT }}
-        GOOGLE_MAIL_KEY: ${{ secrets.GOOGLE_MAIL_KEY }}
-        GOOGLE_OAUTH_CLIENT_KEY: ${{ secrets.GOOGLE_OAUTH_CLIENT_KEY }}
+        AWS_S3_NAME: ${{ secrets.AWS_S3_NAME }}
+        KAKAO_NATIVE_KEY: ${{ secrets.KAKAO_NATIVE_KEY }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        APP_DOMAIN: ${{ env.APP_DOMAIN }}
+        APP_LOG_DIR: ${{ env.APP_LOG_DIR }}
+        APP_MODE: ${{ env.APP_MODE }}
+        APP_OFFICIAL_MAIL: ${{ env.APP_OFFICIAL_MAIL }}
 
-    - name: Cache node modules
-      uses: actions/cache@v2
+    - name: Cache
+      uses: actions/cache@v4.2.3
       id: cache
       with:
         path: node_modules
@@ -63,23 +60,23 @@ jobs:
     - name: Install Dependencies	# 디펜던시 키가 없으면 디펜던시 인스톨
       if: steps.cache.outputs.cache-hit != 'true'
       run: npm install
-      
-    - name: archive hive-f-server 
-      run: tar cvfz ./hive-f-server.tar.gz * .env
+
+    - name: Archiving Deployment
+      run: tar cvfz ./deploy.tar.gz * .env
 
     - name: AWS configure credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         role-session-name: GitHubActions
-        aws-region: ap-northeast-2
+        aws-region: ${{ env.AWS_REGION }}
         
     - name: upload to S3
-      run: aws s3 cp --region ap-northeast-2 ./hive-f-server.tar.gz ${{ secrets.S3_ARCHIVE_URL }}
+      run: aws s3 cp --region ${{ env.AWS_REGION }} ./deploy.tar.gz s3://${{ env.AWS_S3_BUCKET }}/archive/deploy.tar.gz
       
     - name: deploy with AWS codeDeploy
       run: aws deploy create-deployment
-        --application-name hive-f
+        --application-name ${{ env.AWS_CODEDEPLOY_APP_NAME }}
         --deployment-config-name CodeDeployDefault.OneAtATime
-        --deployment-group-name hive-github-actions
-        --s3-location bucket=hive-f-s3-bucket,bundleType=tgz,key=archive/hive-f-server.tar.gz
+        --deployment-group-name ${{ env.AWS_CODEDEPLOY_GROUP_NAME }}
+        --s3-location bucket=${{ env.AWS_S3_BUCKET }},bundleType=tgz,key=archive/deploy.tar.gz
